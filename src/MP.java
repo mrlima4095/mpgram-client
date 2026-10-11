@@ -63,6 +63,11 @@ public class MP extends MIDlet
 	implements CommandListener, ItemCommandListener, ItemStateListener, Runnable, PlayerListener,
 		LangConstants, Constants
 {
+	/** Host bridge used by the MIDPlay integration. */
+	public interface Host {
+		void openNotePickerForMPGram(String peerId, String topMessageId);
+		boolean saveMPGramMessageAsNote(String text);
+	}
 
 	// region Constants
 //#ifndef NO_LANGS
@@ -147,9 +152,15 @@ public class MP extends MIDlet
 
 	// midp lifecycle
 	static MP midlet;
+	private static MIDlet host;
+	private static Runnable exitHandler;
+	private static boolean embeddedHost;
+	private static boolean backgroundStart;
 	static Display display;
 	static Displayable current;
 	static boolean paused;
+	private static boolean authenticationCancelled;
+	private static Alert authorizingAlert;
 
 	private static String version;
 
@@ -321,6 +332,7 @@ public class MP extends MIDlet
 	static Command replyMsgCmd;
 	static Command forwardMsgCmd;
 	static Command copyMsgCmd;
+	static Command saveNoteCmd;
 	static Command messageLinkCmd;
 	static Command deleteMsgCmd;
 	static Command editMsgCmd;
@@ -346,6 +358,7 @@ public class MP extends MIDlet
 	static Command latestCmd;
 	static Command searchMsgCmd;
 	static Command sendStickerCmd;
+	static Command sendNoteCmd;
 //#ifndef NO_RECORD
 	static Command sendVoiceCmd;
 //#endif
@@ -540,6 +553,69 @@ public class MP extends MIDlet
 
 	// region MIDlet
 
+	/** Opens MPGram inside an existing MIDlet without starting a second application. */
+	public static void open(MIDlet app, Runnable onExit) {
+		host = app;
+		exitHandler = onExit;
+		embeddedHost = true;
+		backgroundStart = false;
+		if (midlet == null) {
+			new MP().startApp();
+		} else if (display != null) {
+			display.setCurrent(current == null ? mainDisplayable : current);
+		}
+	}
+
+	/** Loads and validates a saved MPGram session without taking over the host display. */
+	public static void warmUp(MIDlet app) {
+		host = app;
+		embeddedHost = true;
+		backgroundStart = true;
+		if (midlet == null) new MP().startApp();
+	}
+
+	public static boolean hasSavedSession() {
+		try {
+			RecordStore store = RecordStore.openRecordStore(AUTH_RECORD_NAME, false);
+			try {
+				JSONObject session = parseObject(new String(store.getRecord(1), "UTF-8"));
+				return session.getString("user", null) != null && session.getInt("state", 0) >= 3;
+			} finally {
+				store.closeRecordStore();
+			}
+		} catch (Exception e) {
+			return false;
+		}
+	}
+
+	public static void returnToCurrentChat() {
+		if (display != null) display.setCurrent(current == null ? mainDisplayable : current);
+	}
+
+	public static void sendNoteToChat(String peerId, String topMessageId, String text) {
+		if (midlet == null || text == null || text.length() == 0) return;
+		synchronized (midlet) {
+			if (sending) return;
+			sending = true;
+		}
+		display.setCurrent(current == null ? mainDisplayable : current);
+		midlet.start(RUN_SEND_MESSAGE,
+				new Object[] {text, peerId, null, null, null, null, null, null, null, topMessageId});
+	}
+
+	static void saveMessageAsNote(String text) {
+		boolean saved = host instanceof Host && ((Host) host).saveMPGramMessageAsNote(text);
+		display(infoAlert(saved ? L[LNoteSaved_Alert] : L[LNoteSaveFailed_Alert]), current);
+	}
+
+	private void closeHost() {
+		if (embeddedHost) {
+			if (exitHandler != null) exitHandler.run();
+		} else {
+			notifyDestroyed();
+		}
+	}
+
 	protected void destroyApp(boolean u) {
 //#ifndef NO_NOTIFY
 //#ifndef NO_NOKIAUI
@@ -553,7 +629,7 @@ public class MP extends MIDlet
 				writeConfig();
 			} catch (Throwable ignored) {}
 		}
-		notifyDestroyed();
+		closeHost();
 	}
 
 	protected void pauseApp() {
@@ -564,21 +640,18 @@ public class MP extends MIDlet
 		paused = false;
 		if (midlet != null) return;
 		midlet = this;
+		if (host == null) host = this;
 
-		version = getAppProperty("MIDlet-Version");
-		display = Display.getDisplay(this);
-
-		// sanity check
-		if (!"nnproject".equals(getAppProperty("MIDlet-Vendor"))
-				|| checkClass("javay.microedition.lcdui.Canvas"))
-			throw new RuntimeException();
+		version = host.getAppProperty("MIDlet-Version");
+		display = Display.getDisplay(host);
 
 		Form f = new Form("MPGram");
 		f.append("Loading");
-		display.setCurrent(mainDisplayable = f);
+		mainDisplayable = f;
+		if (!backgroundStart) display.setCurrent(f);
 
 //#ifndef NO_EMOJI
-		emojiBundled = getAppProperty("mpgram-emoji-bundled") != null;
+		emojiBundled = host.getAppProperty("mpgram-emoji-bundled") != null;
 //#endif
 
 		// get device name
@@ -882,7 +955,7 @@ public class MP extends MIDlet
 
 		if (user == null) {
 			try {
-				user = getAppProperty("MPGram-User");
+				user = host.getAppProperty("MPGram-User");
 			} catch (Exception ignored) {}
 		}
 
@@ -952,6 +1025,7 @@ public class MP extends MIDlet
 		replyMsgCmd = new Command(L[LReply], Command.ITEM, 3);
 		forwardMsgCmd = new Command(L[LForward], Command.ITEM, 4);
 		copyMsgCmd = new Command(L[LCopyMessage], Command.ITEM, 5);
+		saveNoteCmd = new Command(L[LSaveNote], Command.ITEM, 6);
 		messageLinkCmd = new Command(L[LCopyMessageLink], Command.ITEM, 7);
 		deleteMsgCmd = new Command(L[LDelete], Command.ITEM, 8);
 		editMsgCmd = new Command(L[LEdit], Command.ITEM, 9);
@@ -977,6 +1051,7 @@ public class MP extends MIDlet
 		newerMessagesCmd = new Command(L[LNewer], Command.ITEM, 1);
 		searchMsgCmd = new Command(L[LSearch], Command.SCREEN, 10);
 		sendStickerCmd = new Command(L[LSendSticker], Command.SCREEN, 6);
+		sendNoteCmd = new Command(L[LSendNote], Command.SCREEN, 7);
 //#ifndef NO_RECORD
 		sendVoiceCmd = new Command(L[LSendVoiceMessage], Command.SCREEN, 7);
 //#endif
@@ -1161,7 +1236,7 @@ public class MP extends MIDlet
 			return;
 		}
 
-		start(RUN_VALIDATE_AUTH, null);
+		start(RUN_VALIDATE_AUTH, backgroundStart ? this : null);
 	}
 
 	// endregion
@@ -1195,6 +1270,7 @@ public class MP extends MIDlet
 //		running++;
 		switch (run) {
 		case RUN_VALIDATE_AUTH: {
+			authenticationCancelled = false;
 			String s = instanceUrl;
 			if (param == null && s.endsWith(".nnchan.ru/") && !"ru".equals(lang)) {
 				int i = s.indexOf(".nnchan.ru");
@@ -1204,12 +1280,15 @@ public class MP extends MIDlet
 			Displayable returnTo = param == null ? authForm : current;
 			Alert alert = loadingAlert(L[LAuthorizing]);
 			if (param == null) {
+				authorizingAlert = alert;
 				alert.addCommand(exitCmd);
+				alert.addCommand(logoutCmd);
 				alert.setCommandListener(this);
 			}
 			display(alert, param == null ? null : returnTo);
 			try {
 				selfId = ((JSONObject) api("me&status=1")).getString("id");
+				if (authenticationCancelled) break;
 				userState = 4;
 
 				try {
@@ -1230,6 +1309,7 @@ public class MP extends MIDlet
 					start(RUN_KEEP_ALIVE, null);
 				break;
 			} catch (APIException e) {
+				if (authenticationCancelled) break;
 				if (e.code == 401) {
 					if (param == null) {
 						mainDisplayable = returnTo;
@@ -1241,6 +1321,7 @@ public class MP extends MIDlet
 				}
 				alert = errorAlert(e);
 			} catch (Exception e) {
+				if (authenticationCancelled) break;
 				alert = errorAlert(e);
 			}
 			if (param == null) {
@@ -1817,8 +1898,8 @@ public class MP extends MIDlet
 			try {
 				JSONObject j = parseObject(new String(get(OTA_URL + "?v=" + version + "&l=" + lang
 						+ (LITE ? "&m=1" : "")
-						+ (midlet.getAppProperty("mpgram-blackberry-build") != null ? "&bb=1" : "")
-						+ (midlet.getAppProperty("mpgram-samsung-build") != null ? "&sams=1" : "")), encoding));
+						+ (host.getAppProperty("mpgram-blackberry-build") != null ? "&bb=1" : "")
+						+ (host.getAppProperty("mpgram-samsung-build") != null ? "&sams=1" : "")), encoding));
 				if (j.getBoolean("update_available", false) && checkUpdates) {
 					updateUrl = j.getString("download_url");
 					Alert a = new Alert("", "", null, AlertType.INFO);
@@ -2652,7 +2733,7 @@ public class MP extends MIDlet
 			try {
 				Thread.sleep(1000);
 			} catch (Exception ignored) {}
-			notifyDestroyed();
+			closeHost();
 			break;
 		}
 		case RUN_INVITE_MEMBER: {
@@ -3131,6 +3212,15 @@ public class MP extends MIDlet
 	// region UI Listeners
 
 	public void commandAction(Command c, Displayable d) {
+		if (c == logoutCmd && d == authorizingAlert) {
+			authenticationCancelled = true;
+			userState = 0;
+			user = phone = selfId = null;
+			writeAuth();
+			current = mainDisplayable = authForm;
+			destroyApp(true);
+			return;
+		}
 //#if ""!=""
 		// assertion so idea won't complain about possible NPEs
 		// if it can be null on some device/platform, then we don't want to support that one.
@@ -3249,6 +3339,11 @@ public class MP extends MIDlet
 			}
 			if (c == sendStickerCmd) {
 				openLoad(new StickerPacksList((MPChat) d));
+				return;
+			}
+			if (c == sendNoteCmd) {
+				int reply = ((MPChat) d).topMsgId();
+				((Host) host).openNotePickerForMPGram(((MPChat) d).id(), reply == 0 ? null : Integer.toString(reply));
 				return;
 			}
 //#ifndef NO_RECORD
@@ -4858,6 +4953,11 @@ public class MP extends MIDlet
 	public void commandAction(Command c, Item item) {
 		{ // message
 			// note: no need to check if canvas ui is enabled, since event came from lcdui item
+			if (c == saveNoteCmd) {
+				String[] s = (String[]) ((MPForm) current).urls.get(item);
+				if (s != null) saveMessageAsNote((String) ((Object[]) ((MPForm) current).urls.get(s[1]))[2]);
+				return;
+			}
 			if (c == itemChatCmd) {
 				String[] s = (String[]) ((MPForm) current).urls.get(item);
 				if (s == null) return;
@@ -5127,7 +5227,7 @@ public class MP extends MIDlet
 				recordAlert.addCommand(recorderStopCmd);
 				recordAlert.setString(L[LRecording_Alert]);
 				display(recordAlert, null);
-			} else if (PlayerListener.STOPPED.equals(event) || PlayerListener.STOPPED_AT_TIME.equals(event)) {
+			} else if (PlayerListener.STOPPED.equals(event) || "stoppedAtTime".equals(event)) {
 				try {
 					((RecordControl) recordControl).commit();
 					if (series40) Thread.sleep(1500);
@@ -5161,7 +5261,7 @@ public class MP extends MIDlet
 				voiceAlert.removeCommand(voicePlayCmd);
 				voiceAlert.addCommand(voicePauseCmd);
 				start(RUN_VOICE_LOOP, player);
-			} else if (PlayerListener.STOPPED.equals(event) || PlayerListener.STOPPED_AT_TIME.equals(event)) {
+			} else if (PlayerListener.STOPPED.equals(event) || "stoppedAtTime".equals(event)) {
 				voiceState = 2;
 				voiceAlert.removeCommand(voicePauseCmd);
 				voiceAlert.addCommand(voicePlayCmd);
@@ -5227,7 +5327,7 @@ public class MP extends MIDlet
 				playerPlaypauseBtn.setDefaultCommand(playlistPauseCmd);
 			}
 			start(RUN_PLAYER_LOOP, player);
-		} else if (PlayerListener.STOPPED.equals(event) || PlayerListener.STOPPED_AT_TIME.equals(event)) {
+		} else if (PlayerListener.STOPPED.equals(event) || "stoppedAtTime".equals(event)) {
 			playerState = 2;
 			if (playerPlaypauseBtn != null) {
 				playerPlaypauseBtn.setText(L[LPlay_Player]);
@@ -6195,6 +6295,7 @@ public class MP extends MIDlet
 	}
 
 	static void display(Alert a, Displayable d) {
+		if (backgroundStart) return;
 		if (updateUrl != null) {
 			return;
 		}
@@ -6217,6 +6318,7 @@ public class MP extends MIDlet
 	}
 
 	static void display(Displayable d, boolean back) {
+		if (backgroundStart) return;
 		if (d instanceof Alert) {
 			display.setCurrent((Alert) d, mainDisplayable);
 			return;
@@ -6308,7 +6410,7 @@ public class MP extends MIDlet
 //					}
 //				}
 			}
-			if (platformRequest(url)) destroyApp(true);
+			if (host.platformRequest(url)) destroyApp(true);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

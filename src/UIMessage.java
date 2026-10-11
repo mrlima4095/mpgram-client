@@ -1738,6 +1738,9 @@ public class UIMessage extends UIItem implements LangConstants, Constants {
 	void menuAction(int option) {
 		String idStr = Integer.toString(this.id);
 		switch (option) {
+		case LSaveNote:
+			MP.saveMessageAsNote(origText);
+			break;
 		case LReply:
 //			MP.display(MP.writeForm(peerId, idStr, "", null, null, null));
 			((ChatCanvas) container).startReply(this);
@@ -1862,7 +1865,7 @@ public class UIMessage extends UIItem implements LangConstants, Constants {
 			item = subMenu(subFocus[subFocusCurrent]);
 		}
 
-		int[] general = new int[10];
+		int[] general = new int[12];
 		int count = 0;
 		ChatCanvas chat = (ChatCanvas) container;
 		if (chat.query != null || chat.mediaFilter != null) {
@@ -1877,7 +1880,10 @@ public class UIMessage extends UIItem implements LangConstants, Constants {
 			if (out && !fwd && !poll) general[count++] = LEdit;
 			if (chat.canPin) general[count++] = LPin;
 			if (poll && !pollClosed && pollVoted) general[count++] = LRetractVote;
-			if (origText != null && origText.length() != 0) general[count++] = LCopyMessage;
+			if (origText != null && origText.length() != 0) {
+				general[count++] = LCopyMessage;
+				general[count++] = LSaveNote;
+			}
 			if (!chat.selfChat && !chat.user) general[count++] = LCopyMessageLink;
 			general[count++] = LForward;
 			if (chat.canDelete || out) general[count++] = LDelete;

@@ -133,6 +133,8 @@
 	"Older": "Older",
 	"Newer": "Newer",
 	"SendSticker": "Send sticker",
+	"SendNote": "Send note",
+	"SaveNote": "Save note",
 	"Menu": "Menu",
 	"Write": "Write",
 	"AttachFile": "Attach file",
@@ -337,6 +339,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "Message sent",
+	"NoteSaved_Alert": "Note saved",
+	"NoteSaveFailed_Alert": "Failed to save note",
 	"MessageDeleted_Alert": "Message deleted",
 	"UpdateAvailable_Alert": "Client update available",
 	"MemberBanned_Alert": "Member banned",

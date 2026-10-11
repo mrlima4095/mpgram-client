@@ -238,6 +238,7 @@ public class ChatForm extends MPForm implements MPChat, Runnable {
 		} else if (canWrite) {
 			addCommand(MP.writeCmd);
 			addCommand(MP.sendStickerCmd);
+			addCommand(MP.sendNoteCmd);
 //#ifndef NO_RECORD
 			if (MP.voiceConversion && MP.supportsAudioRecording) {
 				addCommand(MP.sendVoiceCmd);
@@ -465,6 +466,7 @@ public class ChatForm extends MPForm implements MPChat, Runnable {
 			}
 			if (text != null && text.length() != 0) {
 				s.addCommand(MP.copyMsgCmd);
+				s.addCommand(MP.saveNoteCmd);
 			}
 			if (query != null || mediaFilter != null) {
 				s.setDefaultCommand(MP.gotoMsgCmd);

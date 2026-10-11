@@ -133,6 +133,8 @@
 	"Older": "Mais antigo",
 	"Newer": "Mais recente",
 	"SendSticker": "Enviar figurinha",
+	"SendNote": "Enviar nota",
+	"SaveNote": "Salvar nota",
 	"Menu": "Menu", // Untranslated
 	"Write": "Write", // Untranslated
 	"AttachFile": "Attach file", // Untranslated
@@ -337,6 +339,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "Mensagem enviada",
+	"NoteSaved_Alert": "Nota salva",
+	"NoteSaveFailed_Alert": "Falha ao salvar nota",
 	"MessageDeleted_Alert": "Mensagem excluída",
 	"UpdateAvailable_Alert": "Atualização disponível",
 	"MemberBanned_Alert": "Membro banido",

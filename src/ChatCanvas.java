@@ -1145,6 +1145,7 @@ public class ChatCanvas extends MPCanvas implements MPChat, Runnable {
 					LChatInfo,
 					LSearchMessages,
 					LSendSticker,
+					LSendNote,
 					LWriteMessage,
 //#ifndef NO_RECORD
 					MP.voiceConversion && MP.supportsAudioRecording ? LSendVoiceMessage : Integer.MIN_VALUE,
@@ -1271,6 +1272,9 @@ public class ChatCanvas extends MPCanvas implements MPChat, Runnable {
 			break;
 		case LSendSticker:
 			MP.midlet.commandAction(MP.sendStickerCmd, this);
+			break;
+		case LSendNote:
+			MP.midlet.commandAction(MP.sendNoteCmd, this);
 			break;
 		case LWriteMessage:
 			if (replyMsgId != 0 || editMsgId != 0 || topMsgId != 0) {
@@ -1539,6 +1543,7 @@ public class ChatCanvas extends MPCanvas implements MPChat, Runnable {
 					LAttachFile,
 //#endif
 					LSendSticker,
+					LSendNote,
 //#ifndef NO_RECORD
 					MP.voiceConversion && MP.supportsAudioRecording ? LSendVoiceMessage : Integer.MIN_VALUE,
 //#endif
