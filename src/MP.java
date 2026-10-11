@@ -59,7 +59,7 @@ import zip.Inflater;
 import zip.InflaterInputStream;
 //#endif
 
-public class MP extends MIDlet
+public class MP
 	implements CommandListener, ItemCommandListener, ItemStateListener, Runnable, PlayerListener,
 		LangConstants, Constants
 {
@@ -154,7 +154,6 @@ public class MP extends MIDlet
 	static MP midlet;
 	private static MIDlet host;
 	private static Runnable exitHandler;
-	private static boolean embeddedHost;
 	private static boolean backgroundStart;
 	static Display display;
 	static Displayable current;
@@ -557,10 +556,9 @@ public class MP extends MIDlet
 	public static void open(MIDlet app, Runnable onExit) {
 		host = app;
 		exitHandler = onExit;
-		embeddedHost = true;
 		backgroundStart = false;
 		if (midlet == null) {
-			new MP().startApp();
+			new MP().start();
 		} else if (display != null) {
 			display.setCurrent(current == null ? mainDisplayable : current);
 		}
@@ -569,9 +567,8 @@ public class MP extends MIDlet
 	/** Loads and validates a saved MPGram session without taking over the host display. */
 	public static void warmUp(MIDlet app) {
 		host = app;
-		embeddedHost = true;
 		backgroundStart = true;
-		if (midlet == null) new MP().startApp();
+		if (midlet == null) new MP().start();
 	}
 
 	public static boolean hasSavedSession() {
@@ -609,14 +606,10 @@ public class MP extends MIDlet
 	}
 
 	private void closeHost() {
-		if (embeddedHost) {
-			if (exitHandler != null) exitHandler.run();
-		} else {
-			notifyDestroyed();
-		}
+		if (exitHandler != null) exitHandler.run();
 	}
 
-	protected void destroyApp(boolean u) {
+	void destroyApp(boolean u) {
 //#ifndef NO_NOTIFY
 //#ifndef NO_NOKIAUI
 		try {
@@ -632,15 +625,15 @@ public class MP extends MIDlet
 		closeHost();
 	}
 
-	protected void pauseApp() {
+	void pauseApp() {
 		paused = true;
 	}
 
-	protected void startApp()  {
+	private void start()  {
 		paused = false;
 		if (midlet != null) return;
+		if (host == null) throw new IllegalStateException("MPGram host MIDlet is not set");
 		midlet = this;
-		if (host == null) host = this;
 
 		version = host.getAppProperty("MIDlet-Version");
 		display = Display.getDisplay(host);
