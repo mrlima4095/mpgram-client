@@ -3321,13 +3321,6 @@ public class MP
 			}
 //#ifndef NO_CHAT_CANVAS
 			if (c == canvasOkCmd) {
-				if (d instanceof ChatsCanvas) {
-					UIItem focused = ((ChatsCanvas) d).focusedItem;
-					if (focused instanceof UIDialog) {
-						((ChatsCanvas) d).select((UIDialog) focused);
-						return;
-					}
-				}
 				//noinspection DataFlowIssue
 				((MPCanvas) d).key(-5, false);
 				return;
