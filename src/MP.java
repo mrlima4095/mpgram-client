@@ -160,6 +160,9 @@ public class MP
 	static boolean paused;
 	private static boolean authenticationCancelled;
 	private static Alert authorizingAlert;
+	private static Command notificationOpenCmd;
+	private static Command notificationCloseCmd;
+	private static String notificationAlertPeerId;
 
 	private static String version;
 
@@ -1080,6 +1083,8 @@ public class MP
 		downloadBrowserCmd = new Command(L[LWithBrowser], Command.CANCEL, 1);
 		cancelDownloadCmd = new Command(L[LCancel], Command.CANCEL, 1);
 		okDownloadCmd = new Command(L[LOk], Command.CANCEL, 1);
+		notificationOpenCmd = new Command(L[LOpen], Command.OK, 0);
+		notificationCloseCmd = new Command(L[LClose], Command.CANCEL, 1);
 		openDownloadedCmd = new Command(L[LOpen], Command.SCREEN, 2);
 		cancelUploadCmd = new Command(L[LCancel], Command.CANCEL, 1);
 		confirmCmd = new Command(L[LOk], Command.OK, 1);
@@ -3138,7 +3143,11 @@ public class MP
 					if (!(display.getCurrent() instanceof Alert)) {
 						Alert alert = new Alert(title);
 						alert.setString(text);
-						alert.setTimeout(1500);
+						alert.setTimeout(Alert.FOREVER);
+						alert.addCommand(notificationOpenCmd);
+						alert.addCommand(notificationCloseCmd);
+						alert.setCommandListener(this);
+						notificationAlertPeerId = peerId;
 						display(alert, null);
 					}
 				}
@@ -3205,6 +3214,16 @@ public class MP
 	// region UI Listeners
 
 	public void commandAction(Command c, Displayable d) {
+		if (d instanceof Alert && (c == notificationOpenCmd || c == notificationCloseCmd)) {
+			String peerId = notificationAlertPeerId;
+			notificationAlertPeerId = null;
+			if (c == notificationOpenCmd && peerId != null) {
+				openChat(peerId, 0);
+			} else {
+				display(current);
+			}
+			return;
+		}
 		if (c == logoutCmd && d == authorizingAlert) {
 			authenticationCancelled = true;
 			userState = 0;
