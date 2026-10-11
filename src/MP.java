@@ -163,6 +163,7 @@ public class MP
 	private static Command notificationOpenCmd;
 	private static Command notificationCloseCmd;
 	private static String notificationAlertPeerId;
+	private static Displayable notificationReturnScreen;
 
 	private static String version;
 
@@ -3148,7 +3149,8 @@ public class MP
 						alert.addCommand(notificationCloseCmd);
 						alert.setCommandListener(this);
 						notificationAlertPeerId = peerId;
-						display(alert, null);
+						notificationReturnScreen = display.getCurrent();
+						display.setCurrent(alert, notificationReturnScreen);
 					}
 				}
 				notified = true;
@@ -3216,9 +3218,13 @@ public class MP
 	public void commandAction(Command c, Displayable d) {
 		if (d instanceof Alert && (c == notificationOpenCmd || c == notificationCloseCmd)) {
 			String peerId = notificationAlertPeerId;
+			Displayable returnTo = notificationReturnScreen;
 			notificationAlertPeerId = null;
+			notificationReturnScreen = null;
 			if (c == notificationOpenCmd && peerId != null) {
 				openChat(peerId, 0);
+			} else if (returnTo != null) {
+				display.setCurrent(returnTo);
 			} else {
 				display(current);
 			}
