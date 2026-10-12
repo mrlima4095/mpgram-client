@@ -87,6 +87,12 @@
 	"ClearCache": "Limpar cache",
 	"Locate": "Localizar",
 	"ShowSessionCode": "Mostrar código da sessão",
+	"ExportSessionNote": "Exportar para uma nota",
+	"ExportSessionFile": "Exportar para arquivo",
+	"ImportSessionNote": "Importar de uma nota",
+	"ImportSessionFile": "Importar de arquivo",
+	"SessionCodeExported_Alert": "Código da sessão exportado",
+	"SessionCodeExportFailed_Alert": "Falha ao salvar o código da sessão",
 	"ResetSettings": "Redefinir configurações",
 
 	// Chats list commands

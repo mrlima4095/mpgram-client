@@ -87,6 +87,12 @@
 	"ClearCache": "Clear cache",
 	"Locate": "Locate",
 	"ShowSessionCode": "Show session code",
+	"ExportSessionNote": "Export to note",
+	"ExportSessionFile": "Export to file",
+	"ImportSessionNote": "Import from note",
+	"ImportSessionFile": "Import from file",
+	"SessionCodeExported_Alert": "Session code exported",
+	"SessionCodeExportFailed_Alert": "Failed to save session code",
 	"ResetSettings": "Reset settings",
 	
 	// Chats list commands

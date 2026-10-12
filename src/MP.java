@@ -66,7 +66,9 @@ public class MP
 	/** Host bridge used by the MIDPlay integration. */
 	public interface Host {
 		void openNotePickerForMPGram(String peerId, String topMessageId);
+		void openSessionNotePickerForMPGram();
 		boolean saveMPGramMessageAsNote(String text);
+		boolean saveMPGramSessionCodeAsNote(String text);
 	}
 
 	// region Constants
@@ -279,6 +281,11 @@ public class MP
 
 	// auth
 	private static String user;
+	private static Displayable sessionImportReturn;
+	private static Displayable sessionCodeBox;
+	private static Displayable sessionFileNameBox;
+	private static String sessionExportDirectory;
+	private static String sessionExportText;
 	private static int userState;
 	private static String phone;
 	static String selfId;
@@ -303,6 +310,8 @@ public class MP
 	private static Command authPasswordCmd;
 	private static Command authNewSessionCmd;
 	private static Command authImportSessionCmd;
+	private static Command authImportSessionNoteCmd;
+	private static Command authImportSessionFileCmd;
 	private static Command authRetryCmd;
 	private static Command authQrCmd;
 	private static Command authCheckQrCmd;
@@ -314,6 +323,9 @@ public class MP
 	private static Command saveLanguagesCmd;
 	//#endif
 	private static Command exportSessionCmd;
+	private static Command exportSessionNoteCmd;
+	private static Command exportSessionFileCmd;
+	private static Command saveSessionFileCmd;
 	private static Command resetCmd;
 //#ifndef NO_FILE
 	private static Command downloadPathCmd;
@@ -587,6 +599,49 @@ public class MP
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	public static void importSessionFromText(String text) {
+		Displayable returnTo = sessionImportReturn == null ? authForm : sessionImportReturn;
+		sessionImportReturn = null;
+		String code = text == null ? "" : text.trim();
+		boolean importedBundle = false;
+		if (code.startsWith("{")) {
+			try {
+				JSONObject exported = parseObject(code);
+				String exportedUser = exported.getString("user", null);
+				if (exportedUser != null) {
+					importedBundle = true;
+					code = exportedUser.trim();
+					instanceUrl = exported.getString("url", instanceUrl);
+					instancePassword = exported.getString("instPass", instancePassword);
+				}
+			} catch (Exception ignored) {}
+		}
+		if ((code.startsWith("{") && !importedBundle) || code.length() < 32) {
+			display(errorAlert(L[LInvalidSessionCode_Alert]), returnTo);
+			return;
+		}
+		user = code;
+		writeAuth();
+		display(returnTo);
+		display(loadingAlert(L[LWaitingForServerResponse]), returnTo);
+		midlet.start(RUN_VALIDATE_AUTH, code);
+	}
+
+	public static void cancelSessionImport() {
+		Displayable returnTo = sessionImportReturn;
+		sessionImportReturn = null;
+		display(returnTo == null ? authForm : returnTo);
+	}
+
+	private static String sessionExportData(String code) {
+		JSONObject exported = new JSONObject();
+		exported.put("format", "MPGram-session-v1");
+		exported.put("user", code == null ? "" : code.trim());
+		exported.put("url", instanceUrl);
+		exported.put("instPass", instancePassword);
+		return exported.toString();
 	}
 
 	public static void returnToCurrentChat() {
@@ -990,6 +1045,12 @@ public class MP
 		authPasswordCmd = new Command(L[LNext], Command.OK, 1);
 		authNewSessionCmd = new Command(L[LNewSession], Command.ITEM, 1);
 		authImportSessionCmd = new Command(L[LImportSession], Command.ITEM, 2);
+		authImportSessionNoteCmd = new Command(L[LImportSessionNote], Command.ITEM, 3);
+		//#ifndef NO_FILE
+		authImportSessionFileCmd = new Command(L[LImportSessionFile], Command.ITEM, 4);
+		exportSessionFileCmd = new Command(L[LExportSessionFile], Command.ITEM, 2);
+		saveSessionFileCmd = new Command(L[LOk], Command.OK, 1);
+		//#endif
 		authRetryCmd = new Command(L[LRetry], Command.OK, 1);
 		authQrCmd = new Command(L[LNewSession], Command.ITEM, 1);
 		authCheckQrCmd = new Command(L[LCheck], Command.OK, 1);
@@ -1001,6 +1062,7 @@ public class MP
 		saveLanguagesCmd = new Command(L[LBack], Command.BACK, 1);
 //#endif
 		exportSessionCmd = new Command(L[LShowSessionCode], Command.ITEM, 1);
+		exportSessionNoteCmd = new Command(L[LExportSessionNote], Command.ITEM, 1);
 		resetCmd = new Command(L[LResetSettings], Command.ITEM, 1);
 //#ifndef NO_FILE
 		downloadPathCmd = new Command(L[LLocate], Command.ITEM, 1);
@@ -1189,6 +1251,7 @@ public class MP
 		s.setItemCommandListener(midlet);
 		s.setLayout(Item.LAYOUT_EXPAND | Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
 		f.append(s);
+
 
 		TextField t = new TextField(L[LInstanceURL], instanceUrl, 200, TextField.URL);
 		t.setLayout(Item.LAYOUT_EXPAND | Item.LAYOUT_NEWLINE_BEFORE | Item.LAYOUT_NEWLINE_AFTER);
@@ -3507,18 +3570,56 @@ public class MP
 			}
 		}
 		{ // auth commands
+			if (c == authImportSessionNoteCmd && (d == authForm || d instanceof TextBox)) {
+				sessionImportReturn = d;
+				if (host instanceof Host) {
+					((Host) host).openSessionNotePickerForMPGram();
+				}
+				return;
+			}
+			//#ifndef NO_FILE
+			if (c == authImportSessionFileCmd && (d == authForm || d instanceof TextBox)) {
+				sessionImportReturn = d;
+				openFilePicker(lastUploadPath != null ? lastUploadPath : lastDownloadPath, 5);
+				return;
+			}
+			//#endif
+			if (d == sessionCodeBox && c == exportSessionNoteCmd) {
+				sessionExportText = sessionExportData(((TextBox) d).getString());
+				boolean saved = host instanceof Host && ((Host) host).saveMPGramSessionCodeAsNote(sessionExportText);
+				display(
+					saved ? infoAlert(L[LSessionCodeExported_Alert]) : errorAlert(L[LSessionCodeExportFailed_Alert]),
+					sessionCodeBox);
+				return;
+			}
+			//#ifndef NO_FILE
+			if (d == sessionCodeBox && c == exportSessionFileCmd) {
+				sessionExportText = sessionExportData(((TextBox) d).getString());
+				openFilePicker(lastDownloadPath, 4);
+				return;
+			}
+			if (d == sessionFileNameBox && c == saveSessionFileCmd) {
+				try {
+					saveSessionCodeFile(sessionExportDirectory, ((TextBox) d).getString());
+					display(infoAlert(L[LSessionCodeExported_Alert]), sessionCodeBox);
+				} catch (Exception e) {
+					display(errorAlert(e), sessionFileNameBox);
+				}
+				return;
+			}
+			if (d == sessionFileNameBox && c == cancelCmd) {
+				display(sessionCodeBox);
+				return;
+			}
+			//#endif
+			if (d == sessionCodeBox && (c == backCmd || c == cancelCmd)) {
+				display(settingsForm);
+				return;
+			}
 			if (c == authCmd) {
 				if (d instanceof TextBox) {
-					// user code
-					user = ((TextBox) d).getString().trim();
-					if (user.length() < 32) {
-						display(errorAlert(L[LInvalidSessionCode_Alert]), null);
-						return;
-					}
-					writeAuth();
-
-					display(loadingAlert(L[LWaitingForServerResponse]), null);
-					start(RUN_VALIDATE_AUTH, user);
+					sessionImportReturn = d;
+					importSessionFromText(((TextBox) d).getString());
 					return;
 				}
 			}
@@ -3544,6 +3645,10 @@ public class MP
 					TextBox t = new TextBox(L[LSessionCode], user == null ? "" : user, 200, TextField.NON_PREDICTIVE);
 					t.addCommand(cancelCmd);
 					t.addCommand(authCmd);
+					t.addCommand(authImportSessionNoteCmd);
+					//#ifndef NO_FILE
+					t.addCommand(authImportSessionFileCmd);
+					//#endif
 					t.setCommandListener(this);
 
 					display(t);
@@ -4323,7 +4428,15 @@ public class MP
 				c = backCmd;
 			}
 			if (c == exportSessionCmd) {
-				copy("", user);
+				TextBox t = new TextBox(L[LShowSessionCode], user == null ? "" : user, 200, TextField.NON_PREDICTIVE);
+				t.addCommand(backCmd);
+				t.addCommand(exportSessionNoteCmd);
+				//#ifndef NO_FILE
+				t.addCommand(exportSessionFileCmd);
+				//#endif
+				t.setCommandListener(this);
+				sessionCodeBox = t;
+				display(t);
 				return;
 			}
 			if (c == resetCmd) {
@@ -4634,6 +4747,26 @@ public class MP
 				openFilePicker(path.concat(name).concat("/"), fileMode);
 				return;
 			}
+			if (fileMode == 4 && L[LSaveHere].equals(name)) {
+				sessionExportDirectory = path;
+				TextBox t = new TextBox(L[LExportSessionFile], "mpgram-session.txt", 100, TextField.ANY);
+				t.addCommand(cancelCmd);
+				t.addCommand(saveSessionFileCmd);
+				t.setCommandListener(this);
+				sessionFileNameBox = t;
+				display(t);
+				return;
+			}
+			if (fileMode == 5) {
+				try {
+					importSessionFromText(readSessionCodeFile("file:///".concat(path).concat(name)));
+				} catch (Exception e) {
+					Displayable returnTo = sessionImportReturn == null ? authForm : sessionImportReturn;
+					sessionImportReturn = null;
+					display(errorAlert(e), returnTo);
+				}
+				return;
+			}
 
 //#ifndef NO_CHAT_CANVAS
 			if (fileMode == 2) {
@@ -4673,7 +4806,11 @@ public class MP
 		}
 //#ifndef NO_FILE
 		if (c == cancelCmd && (d instanceof List) && !(d instanceof ChatsList)) {
-			if (fileMode == 3) {
+			if (fileMode == 4) {
+				display(sessionCodeBox);
+			} else if (fileMode == 5) {
+				cancelSessionImport();
+			} else if (fileMode == 3) {
 				goBackToChat();
 			} else if (fileMode == 1) {
 				// go back to write form from file picker
@@ -5915,6 +6052,53 @@ public class MP
 	}
 
 //#ifndef NO_FILE
+	private static void saveSessionCodeFile(String directory, String fileName) throws IOException {
+		String name = fileName == null ? "" : fileName.trim();
+		while (name.indexOf('/') != -1 || name.indexOf('\\') != -1) {
+			int slash = Math.max(name.lastIndexOf('/'), name.lastIndexOf('\\'));
+			name = name.substring(slash + 1);
+		}
+		if (name.length() == 0) name = "mpgram-session.txt";
+		if (!name.toLowerCase().endsWith(".txt")) name = name.concat(".txt");
+		String folder = directory == null ? "" : directory;
+		if (folder.length() > 0 && !folder.endsWith("/")) folder = folder.concat("/");
+		String path = "file:///".concat(folder).concat(name);
+		FileConnection file = null;
+		OutputStream out = null;
+		try {
+			file = (FileConnection) Connector.open(path, Connector.READ_WRITE);
+			if (!file.exists()) file.create();
+			else file.truncate(0);
+			out = file.openOutputStream();
+			byte[] bytes = sessionExportText.getBytes("UTF-8");
+			out.write(bytes, 0, bytes.length);
+		} finally {
+			if (out != null) try { out.close(); } catch (Exception ignored) {}
+			if (file != null) try { file.close(); } catch (Exception ignored) {}
+		}
+	}
+
+	private static String readSessionCodeFile(String path) throws IOException {
+		FileConnection file = null;
+		InputStream in = null;
+		try {
+			file = (FileConnection) Connector.open(path, Connector.READ);
+			in = file.openInputStream();
+			InputStreamReader reader = new InputStreamReader(in, "UTF-8");
+			StringBuffer text = new StringBuffer();
+			char[] buffer = new char[128];
+			int count;
+			while (text.length() < 4096
+					&& (count = reader.read(buffer, 0, Math.min(buffer.length, 4096 - text.length()))) != -1) {
+				text.append(buffer, 0, count);
+			}
+			return text.toString();
+		} finally {
+			if (in != null) try { in.close(); } catch (Exception ignored) {}
+			if (file != null) try { file.close(); } catch (Exception ignored) {}
+		}
+	}
+
 	static void openFilePicker(String path, int mode) {
 		fileMode = mode;
 		if (path == null || path.length() == 0) path = "/";
@@ -5955,7 +6139,7 @@ public class MP
 					break;
 				} else {
 					list.append(L[LBack], null);
-					if (mode == 0) {
+					if (mode == 0 || mode == 4) {
 						list.append(L[LSaveHere], null);
 					}
 					try {
@@ -5966,7 +6150,7 @@ public class MP
 								String s = (String) en.nextElement();
 								if (s.endsWith("/")) {
 									list.append(s.substring(0, s.length() - 1), folderImg);
-								} else if (mode != 0) {
+								} else if (mode != 0 && mode != 4) {
 									if (mode == 2
 											&& !s.endsWith(".jpg") && !s.endsWith(".jpeg")
 											&& !s.endsWith(".png")) {
