@@ -87,6 +87,15 @@
 	"ClearCache": "تفريغ التخزين المؤقت",
 	"Locate": "Locate", // Untranslated
 	"ShowSessionCode": "Show session code", // Untranslated
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "Reset settings", // Untranslated
 	
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "الاقدم",
 	"Newer": "الاحدث",
 	"SendSticker": "ارسال ملصق",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "Menu", // Untranslated
 	"Write": "Write", // Untranslated
 	"AttachFile": "Attach file", // Untranslated
@@ -337,6 +348,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "الرسالة مرسلة",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "الرسالة ممسوحة",
 	"UpdateAvailable_Alert": "تحديث جديد متوفر",
 	"MemberBanned_Alert": "تم حظر العضو",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "مشغل الموسيقى", 
 	"OpenPlayer": "المشغل", 
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "قائمة تشغيل",
 	"Play_Player": "تشغيل",
 	"Pause_Player": "ايقاف", 

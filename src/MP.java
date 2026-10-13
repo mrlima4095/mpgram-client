@@ -67,6 +67,8 @@ public class MP
 	public interface Host {
 		void openNotePickerForMPGram(String peerId, String topMessageId);
 		void openSessionNotePickerForMPGram();
+		void openMIDPlayNowPlayingFromMPGram();
+		void openGitHubLinkFromMPGram(String url);
 		boolean saveMPGramMessageAsNote(String text);
 		boolean saveMPGramSessionCodeAsNote(String text);
 	}
@@ -284,6 +286,8 @@ public class MP
 	private static Displayable sessionImportReturn;
 	private static Displayable sessionCodeBox;
 	private static Displayable sessionFileNameBox;
+	private static Alert sessionImportAlert;
+	private static Alert sessionExportAlert;
 	private static String sessionExportDirectory;
 	private static String sessionExportText;
 	private static int userState;
@@ -312,6 +316,8 @@ public class MP
 	private static Command authImportSessionCmd;
 	private static Command authImportSessionNoteCmd;
 	private static Command authImportSessionFileCmd;
+	private static Command sessionCodeImportCmd;
+	private static Command sessionCodeExportCmd;
 	private static Command authRetryCmd;
 	private static Command authQrCmd;
 	private static Command authCheckQrCmd;
@@ -422,6 +428,7 @@ public class MP
 	static Command playlistPrevCmd;
 	static Command playlistCmd;
 	static Command playerCmd;
+	private static Command hostNowPlayingCmd;
 	static Command togglePlaylistOrderCmd;
 
 	static Command voicePlayCmd;
@@ -580,6 +587,12 @@ public class MP
 		}
 	}
 
+	/** Opens a Telegram URL from an integrated host MIDlet. */
+	public static void openLinkFromHost(MIDlet app, String url, Runnable onExit) {
+		open(app, onExit);
+		if (midlet != null && url != null) openUrl(url, false);
+	}
+
 	/** Loads and validates a saved MPGram session without taking over the host display. */
 	public static void warmUp(MIDlet app) {
 		host = app;
@@ -642,6 +655,32 @@ public class MP
 		exported.put("url", instanceUrl);
 		exported.put("instPass", instancePassword);
 		return exported.toString();
+	}
+
+	private static void showSessionImportPrompt() {
+		Alert prompt = alert(L[LImportSession], L[LSessionImportPrompt], AlertType.INFO);
+		prompt.setTimeout(Alert.FOREVER);
+		prompt.addCommand(authImportSessionNoteCmd);
+		//#ifndef NO_FILE
+		prompt.addCommand(authImportSessionFileCmd);
+		//#endif
+		prompt.addCommand(cancelCmd);
+		prompt.setCommandListener(midlet);
+		sessionImportAlert = prompt;
+		display(prompt, sessionCodeBox);
+	}
+
+	private static void showSessionExportPrompt() {
+		Alert prompt = alert(L[LShowSessionCode], L[LSessionExportPrompt], AlertType.INFO);
+		prompt.setTimeout(Alert.FOREVER);
+		prompt.addCommand(exportSessionNoteCmd);
+		//#ifndef NO_FILE
+		prompt.addCommand(exportSessionFileCmd);
+		//#endif
+		prompt.addCommand(cancelCmd);
+		prompt.setCommandListener(midlet);
+		sessionExportAlert = prompt;
+		display(prompt, sessionCodeBox);
 	}
 
 	public static void returnToCurrentChat() {
@@ -1046,6 +1085,8 @@ public class MP
 		authNewSessionCmd = new Command(L[LNewSession], Command.ITEM, 1);
 		authImportSessionCmd = new Command(L[LImportSession], Command.ITEM, 2);
 		authImportSessionNoteCmd = new Command(L[LImportSessionNote], Command.ITEM, 3);
+		sessionCodeImportCmd = new Command(L[LImportSession], Command.SCREEN, 2);
+		sessionCodeExportCmd = new Command(L[LExportSession], Command.SCREEN, 3);
 		//#ifndef NO_FILE
 		authImportSessionFileCmd = new Command(L[LImportSessionFile], Command.ITEM, 4);
 		exportSessionFileCmd = new Command(L[LExportSessionFile], Command.ITEM, 2);
@@ -1163,6 +1204,7 @@ public class MP
 		playlistPrevCmd = new Command(L[LPrev_Player], Command.ITEM, 1);
 		playlistCmd = new Command(L[LOpenPlaylist], Command.SCREEN, 2);
 		playerCmd = new Command(L[LOpenPlayer], Command.SCREEN, 20);
+		hostNowPlayingCmd = new Command(L[LHostNowPlaying], Command.SCREEN, 21);
 		togglePlaylistOrderCmd = new Command(L[LTogglePlaylistOrder], Command.SCREEN, 3);
 
 		voicePlayCmd = new Command(L[LPlay_Player], Command.OK, 1);
@@ -3570,6 +3612,43 @@ public class MP
 			}
 		}
 		{ // auth commands
+			if (d == sessionCodeBox && c == sessionCodeImportCmd) {
+				showSessionImportPrompt();
+				return;
+			}
+			if (d == sessionCodeBox && c == sessionCodeExportCmd) {
+				showSessionExportPrompt();
+				return;
+			}
+			if (d == sessionImportAlert && c == authImportSessionNoteCmd) {
+				sessionImportReturn = sessionCodeBox;
+				if (host instanceof Host) ((Host) host).openSessionNotePickerForMPGram();
+				return;
+			}
+			//#ifndef NO_FILE
+			if (d == sessionImportAlert && c == authImportSessionFileCmd) {
+				sessionImportReturn = sessionCodeBox;
+				openFilePicker(lastUploadPath != null ? lastUploadPath : lastDownloadPath, 5);
+				return;
+			}
+			if (d == sessionExportAlert && c == exportSessionFileCmd) {
+				sessionExportText = sessionExportData(((TextBox) sessionCodeBox).getString());
+				openFilePicker(lastDownloadPath, 4);
+				return;
+			}
+			//#endif
+			if (d == sessionExportAlert && c == exportSessionNoteCmd) {
+				sessionExportText = sessionExportData(((TextBox) sessionCodeBox).getString());
+				boolean saved = host instanceof Host && ((Host) host).saveMPGramSessionCodeAsNote(sessionExportText);
+				display(
+					saved ? infoAlert(L[LSessionCodeExported_Alert]) : errorAlert(L[LSessionCodeExportFailed_Alert]),
+					sessionCodeBox);
+				return;
+			}
+			if ((d == sessionImportAlert || d == sessionExportAlert) && c == cancelCmd) {
+				display(sessionCodeBox);
+				return;
+			}
 			if (c == authImportSessionNoteCmd && (d == authForm || d instanceof TextBox)) {
 				sessionImportReturn = d;
 				if (host instanceof Host) {
@@ -3584,20 +3663,7 @@ public class MP
 				return;
 			}
 			//#endif
-			if (d == sessionCodeBox && c == exportSessionNoteCmd) {
-				sessionExportText = sessionExportData(((TextBox) d).getString());
-				boolean saved = host instanceof Host && ((Host) host).saveMPGramSessionCodeAsNote(sessionExportText);
-				display(
-					saved ? infoAlert(L[LSessionCodeExported_Alert]) : errorAlert(L[LSessionCodeExportFailed_Alert]),
-					sessionCodeBox);
-				return;
-			}
 			//#ifndef NO_FILE
-			if (d == sessionCodeBox && c == exportSessionFileCmd) {
-				sessionExportText = sessionExportData(((TextBox) d).getString());
-				openFilePicker(lastDownloadPath, 4);
-				return;
-			}
 			if (d == sessionFileNameBox && c == saveSessionFileCmd) {
 				try {
 					saveSessionCodeFile(sessionExportDirectory, ((TextBox) d).getString());
@@ -4430,10 +4496,8 @@ public class MP
 			if (c == exportSessionCmd) {
 				TextBox t = new TextBox(L[LShowSessionCode], user == null ? "" : user, 200, TextField.NON_PREDICTIVE);
 				t.addCommand(backCmd);
-				t.addCommand(exportSessionNoteCmd);
-				//#ifndef NO_FILE
-				t.addCommand(exportSessionFileCmd);
-				//#endif
+				t.addCommand(sessionCodeImportCmd);
+				t.addCommand(sessionCodeExportCmd);
 				t.setCommandListener(this);
 				sessionCodeBox = t;
 				display(t);
@@ -4910,10 +4974,14 @@ public class MP
 				display(playlistList);
 				return;
 			}
-			if (c == playerCmd) {
-				display(initPlayerForm());
-				return;
-			}
+		if (c == playerCmd) {
+			display(initPlayerForm());
+			return;
+		}
+		if (c == hostNowPlayingCmd) {
+			((Host) midlet).openMIDPlayNowPlayingFromMPGram();
+			return;
+		}
 			if (c == togglePlaylistOrderCmd) {
 				playlistDirection = !playlistDirection;
 				needWriteConfig = true;
@@ -6550,6 +6618,7 @@ public class MP
 			} else {
 				d.removeCommand(playerCmd);
 			}
+			d.addCommand(hostNowPlayingCmd);
 		}
 
 		
@@ -6623,6 +6692,10 @@ public class MP
 	}
 
 	static void openUrl(String url, boolean ask) {
+		if (isGitHubUrl(url) && host instanceof Host) {
+			((Host) host).openGitHubLinkFromMPGram(url);
+			return;
+		}
 		if (selfId != null && handleDeepLink(url, ask)) {
 			return;
 		}
@@ -6631,6 +6704,15 @@ public class MP
 			return;
 		}
 		midlet.browse(url);
+	}
+
+	private static boolean isGitHubUrl(String url) {
+		if (url == null) return false;
+		String value = url.trim().toLowerCase();
+		if (value.startsWith("https://")) value = value.substring(8);
+		else if (value.startsWith("http://")) value = value.substring(7);
+		if (value.startsWith("www.")) value = value.substring(4);
+		return value.equals("github.com") || value.startsWith("github.com/");
 	}
 
 	/** @noinspection StatementWithEmptyBody*/

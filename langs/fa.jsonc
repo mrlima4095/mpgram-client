@@ -87,6 +87,15 @@
 	"ClearCache": "پاکسازی کش",
 	"Locate": "مرور فایل",
 	"ShowSessionCode": "نمایش کد نشست",
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "بازنشانی تنظیمات",
 	
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "قدیمی تر",
 	"Newer": "جدیدتر",
 	"SendSticker": "ارسال استیکر",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "منو",
 	"Write": "نوشتن",
 	"AttachFile": "ارسال فایل",
@@ -337,6 +348,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "پیام ارسال شد",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "پیام حذف شد",
 	"UpdateAvailable_Alert": "نسخه جدید در دسترس است",
 	"MemberBanned_Alert": "کاربر مسدود شد",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "پخش کننده موسیقی",
 	"OpenPlayer": "پخش کننده",
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "لیست پخش",
 	"Play_Player": "پخش",
 	"Pause_Player": "مکث",

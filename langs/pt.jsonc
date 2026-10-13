@@ -91,6 +91,9 @@
 	"ExportSessionFile": "Exportar para arquivo",
 	"ImportSessionNote": "Importar de uma nota",
 	"ImportSessionFile": "Importar de arquivo",
+	"ExportSession": "Exportar sessão",
+	"SessionImportPrompt": "Escolha de onde importar a sessão",
+	"SessionExportPrompt": "Escolha onde salvar o código da sessão",
 	"SessionCodeExported_Alert": "Código da sessão exportado",
 	"SessionCodeExportFailed_Alert": "Falha ao salvar o código da sessão",
 	"ResetSettings": "Redefinir configurações",
@@ -457,6 +460,7 @@
 	// Music player
 	"Player_Title": "Reprodutor de música", 
 	"OpenPlayer": "Abrir reprodutor", 
+	"HostNowPlaying": "Tocando agora",
 	"OpenPlaylist": "Abrir playlist",
 	"Play_Player": "Tocar",
 	"Pause_Player": "Pausar", 

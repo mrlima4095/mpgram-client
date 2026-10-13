@@ -87,6 +87,15 @@
 	"ClearCache": "Önbelleği temizle",
 	"Locate": "Konum bul",
 	"ShowSessionCode": "Oturum kodunu göster",
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "Ayarları sıfırla",
 
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "Eski",
 	"Newer": "Yeni",
 	"SendSticker": "Çıkartma gönder",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "Menü",
 	"Write": "Yaz",
 	"AttachFile": "Dosya ekle",
@@ -337,6 +348,8 @@
 
 	// Alert messages
 	"MessageSent_Alert": "Mesaj gönderildi",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "Mesaj silindi",
 	"UpdateAvailable_Alert": "Yeni sürüm mevcut",
 	"MemberBanned_Alert": "Üye yasaklandı",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "Müzik oynatıcı",
 	"OpenPlayer": "Oynatıcı",
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "Çalma listesi",
 	"Play_Player": "Oynat",
 	"Pause_Player": "Duraklat",

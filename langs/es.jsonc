@@ -87,6 +87,15 @@
 	"ClearCache": "Liberar datos",
 	"Locate": "Localizar",
 	"ShowSessionCode": "Mostrar código de sesión", 
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "Restablecer la configuración",
 	
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "Mensajes antiguos",
 	"Newer": "Mensajes mas recientes",
 	"SendSticker": "Enviar pegatina",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "Menú",
 	"Write": "Escribir",
 	"AttachFile": "Adjuntar archivo",
@@ -337,6 +348,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "Mensaje enviado",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "Mensaje eliminado",
 	"UpdateAvailable_Alert": "Nueva actualización disponible",
 	"MemberBanned_Alert": "Miembro prohibido",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "Reproductor de música",
 	"OpenPlayer": "Reproductor",
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "Lista de reproducción",
 	"Play_Player": "Reproducir",
 	"Pause_Player": "Pausa",

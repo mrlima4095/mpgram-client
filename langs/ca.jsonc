@@ -87,6 +87,15 @@
 	"ClearCache": "Esborra memòria cau",
 	"Locate": "Localitza",
 	"ShowSessionCode": "Mostra codi de sessió",
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "Restableix configuració",
 	
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "Més vell",
 	"Newer": "Més nou",
 	"SendSticker": "Envia adhesiu",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "Menú",
 	"Write": "Escriu",
 	"AttachFile": "Adjunta fitxer",
@@ -337,6 +348,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "Missatge enviat",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "Missatge suprimit",
 	"UpdateAvailable_Alert": "Actualització de client disponible",
 	"MemberBanned_Alert": "Membre prohibit",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "Reproductor de música",
 	"OpenPlayer": "Reproductor",
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "Llista de reproducció",
 	"Play_Player": "Reprodueix",
 	"Pause_Player": "Pausa",

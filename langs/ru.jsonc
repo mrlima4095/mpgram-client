@@ -87,6 +87,15 @@
 	"ClearCache": "Очистить кэш",
 	"Locate": "Указать путь",
 	"ShowSessionCode": "Показать код сессии",
+	"ExportSessionNote": "Export to note", // Untranslated
+	"ExportSessionFile": "Export to file", // Untranslated
+	"ImportSessionNote": "Import from note", // Untranslated
+	"ImportSessionFile": "Import from file", // Untranslated
+	"ExportSession": "Export session", // Untranslated
+	"SessionImportPrompt": "Choose where to import the session from", // Untranslated
+	"SessionExportPrompt": "Choose where to save the session code", // Untranslated
+	"SessionCodeExported_Alert": "Session code exported", // Untranslated
+	"SessionCodeExportFailed_Alert": "Failed to save session code", // Untranslated
 	"ResetSettings": "Сбросить настройки",
 	
 	// Chats list commands
@@ -133,6 +142,8 @@
 	"Older": "Старее",
 	"Newer": "Новее",
 	"SendSticker": "Отправить стикер",
+	"SendNote": "Send note", // Untranslated
+	"SaveNote": "Save note", // Untranslated
 	"Menu": "Опции",
 	"Write": "Написать",
 	"AttachFile": "Прикрепить файл",
@@ -337,6 +348,8 @@
 	
 	// Alert messages
 	"MessageSent_Alert": "Сообщение отправлено",
+	"NoteSaved_Alert": "Note saved", // Untranslated
+	"NoteSaveFailed_Alert": "Failed to save note", // Untranslated
 	"MessageDeleted_Alert": "Сообщение удалено",
 	"UpdateAvailable_Alert": "Доступно обновление",
 	"MemberBanned_Alert": "Участник забанен",
@@ -447,6 +460,7 @@
 	// Music player
 	"Player_Title": "Плеер",
 	"OpenPlayer": "Плеер",
+	"HostNowPlaying": "Now Playing", // Untranslated
 	"OpenPlaylist": "Плейлист",
 	"Play_Player": "Воспр.",
 	"Pause_Player": "Пауза",
