@@ -428,7 +428,7 @@ public class MP
 	static Command playlistPrevCmd;
 	static Command playlistCmd;
 	static Command playerCmd;
-	private static Command hostNowPlayingCmd;
+	static Command hostNowPlayingCmd;
 	static Command togglePlaylistOrderCmd;
 
 	static Command voicePlayCmd;
@@ -701,6 +701,10 @@ public class MP
 	static void saveMessageAsNote(String text) {
 		boolean saved = host instanceof Host && ((Host) host).saveMPGramMessageAsNote(text);
 		display(infoAlert(saved ? L[LNoteSaved_Alert] : L[LNoteSaveFailed_Alert]), current);
+	}
+
+	static void hostNowPlaying() {
+		if (host instanceof Host) ((Host) host).openMIDPlayNowPlayingFromMPGram();
 	}
 
 	private void closeHost() {
@@ -4979,7 +4983,7 @@ public class MP
 			return;
 		}
 		if (c == hostNowPlayingCmd) {
-			((Host) midlet).openMIDPlayNowPlayingFromMPGram();
+			hostNowPlaying();
 			return;
 		}
 			if (c == togglePlaylistOrderCmd) {
@@ -6618,7 +6622,15 @@ public class MP
 			} else {
 				d.removeCommand(playerCmd);
 			}
-			d.addCommand(hostNowPlayingCmd);
+			boolean nativeNowPlaying = !(d instanceof Canvas);
+//#ifndef NO_CHAT_CANVAS
+			if (d instanceof ChatsCanvas) nativeNowPlaying = true;
+//#endif
+			if (nativeNowPlaying) {
+				d.addCommand(hostNowPlayingCmd);
+			} else {
+				d.removeCommand(hostNowPlayingCmd);
+			}
 		}
 
 		

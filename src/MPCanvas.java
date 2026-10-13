@@ -1214,11 +1214,23 @@ abstract class MPCanvas extends Canvas implements LangConstants {
 
 	void showMenu(UIItem item, int[] menu) {
 		if (keyboard != null && keyboard.isVisible()) onKeyboardCancel();
-		if (item == null && menu[0] != LDelete && MP.playerState != 0) {
+		if (item == null && menu[0] != LDelete) {
 			int[] t = menu;
-			menu = new int[menu.length + 1];
-			System.arraycopy(t, 0, menu, 0, t.length);
-			menu[t.length] = LOpenPlayer;
+			int baseLen = t.length;
+			for (int i = 0; i < t.length; i++) {
+				if (t[i] == Integer.MIN_VALUE) {
+					baseLen = i;
+					break;
+				}
+			}
+			int extra = MP.playerState != 0 ? 2 : 1;
+			int tail = t.length - baseLen;
+			menu = new int[baseLen + extra + tail];
+			System.arraycopy(t, 0, menu, 0, baseLen);
+			int n = baseLen;
+			if (MP.playerState != 0) menu[n++] = LOpenPlayer;
+			menu[n++] = LHostNowPlaying;
+			if (tail > 0) System.arraycopy(t, baseLen, menu, n, tail);
 		}
 		kineticScroll = 0;
 		this.menuItem = item;

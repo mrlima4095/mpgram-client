@@ -1308,6 +1308,10 @@ public class ChatCanvas extends MPCanvas implements MPChat, Runnable {
 			MP.midlet.commandAction(MP.playerCmd, this);
 			break;
 		}
+		case LHostNowPlaying: {
+			MP.hostNowPlaying();
+			break;
+		}
 
 		// input menu
 		case LEdit:
