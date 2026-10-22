@@ -240,6 +240,8 @@ public class ChatsList extends MPList {
 		String id = (String) ids.elementAt(i);
 		if (id == null) return;
 
+		if (MP.sharePendingText(id)) return;
+
 		if (invite) {
 			MP.deleteFromHistory(this);
 

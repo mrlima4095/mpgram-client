@@ -145,6 +145,8 @@ public class ChatsCanvas extends MPCanvas {
 	void select(UIDialog dialog) {
 		String id = dialog.id;
 
+		if (MP.sharePendingText(id)) return;
+
 		if (msgId != null) {
 			// forward
 			MP.deleteFromHistory(this);

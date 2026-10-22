@@ -69,6 +69,7 @@ public class MP
 		void openSessionNotePickerForMPGram();
 		void openMIDPlayNowPlayingFromMPGram();
 		void openGitHubLinkFromMPGram(String url);
+		void openWattpadLinkFromMPGram(String url);
 		boolean saveMPGramMessageAsNote(String text);
 		boolean saveMPGramSessionCodeAsNote(String text);
 	}
@@ -698,6 +699,31 @@ public class MP
 				new Object[] {text, peerId, null, null, null, null, null, null, null, topMessageId});
 	}
 
+	/** Text waiting for the chat the user picks in the list (MIDPlay share menu). */
+	static String pendingShareText;
+
+	/**
+	 * Opens MPGram's chat list; the chat picked next receives the text. Used by host MIDlets to
+	 * share a link through Telegram.
+	 */
+	public static void shareText(MIDlet app, Runnable onExit, String text) {
+		if (text == null || text.length() == 0) return;
+		pendingShareText = text;
+		open(app, onExit);
+		if (midlet != null && chatsList != null) {
+			midlet.start(RUN_LOAD_FORM, mainDisplayable = chatsList);
+		}
+	}
+
+	static boolean sharePendingText(String peerId) {
+		if (pendingShareText == null) return false;
+		String text = pendingShareText;
+		pendingShareText = null;
+		sendNoteToChat(peerId, null, text);
+		openChat(peerId, -1);
+		return true;
+	}
+
 	static void saveMessageAsNote(String text) {
 		boolean saved = host instanceof Host && ((Host) host).saveMPGramMessageAsNote(text);
 		display(infoAlert(saved ? L[LNoteSaved_Alert] : L[LNoteSaveFailed_Alert]), current);
@@ -712,6 +738,7 @@ public class MP
 	}
 
 	void destroyApp(boolean u) {
+		pendingShareText = null;
 //#ifndef NO_NOTIFY
 //#ifndef NO_NOKIAUI
 		try {
@@ -5138,6 +5165,7 @@ public class MP
 					display.setCurrent(null);
 					return;
 				}
+				if (d == mainDisplayable) pendingShareText = null;
 				display(null, true);
 				return;
 			}
@@ -6708,6 +6736,10 @@ public class MP
 			((Host) host).openGitHubLinkFromMPGram(url);
 			return;
 		}
+		if (isWattpadUrl(url) && host instanceof Host) {
+			((Host) host).openWattpadLinkFromMPGram(url);
+			return;
+		}
 		if (selfId != null && handleDeepLink(url, ask)) {
 			return;
 		}
@@ -6725,6 +6757,15 @@ public class MP
 		else if (value.startsWith("http://")) value = value.substring(7);
 		if (value.startsWith("www.")) value = value.substring(4);
 		return value.equals("github.com") || value.startsWith("github.com/");
+	}
+
+	private static boolean isWattpadUrl(String url) {
+		if (url == null) return false;
+		String value = url.trim().toLowerCase();
+		if (value.startsWith("https://")) value = value.substring(8);
+		else if (value.startsWith("http://")) value = value.substring(7);
+		if (value.startsWith("www.")) value = value.substring(4);
+		return value.equals("wattpad.com") || value.startsWith("wattpad.com/");
 	}
 
 	/** @noinspection StatementWithEmptyBody*/
