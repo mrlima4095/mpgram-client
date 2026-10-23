@@ -218,6 +218,9 @@ public class MP
 	static boolean reopenChat;
 	static boolean fullPlayerCover;
 	static boolean notifications;
+	/** Battery-saving mode: while true the background keep-alive/notification loop stays off. */
+	static boolean economyMode;
+	static boolean keepAliveRunning;
 	static boolean muteUsers, muteChats, muteBroadcasts;
 //#ifndef NO_NOTIFY
 	static boolean notifySound = true;
@@ -614,6 +617,30 @@ public class MP
 		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Battery-saving mode used by the host MIDlet. While enabled, the background keep-alive and
+	 * notification polling loop stays off; disabling it starts the loop again when there is a
+	 * logged-in session, using the user's own keepAlive/notifications preferences.
+	 */
+	public static void setEconomyMode(boolean enabled) {
+		economyMode = enabled;
+		if (!enabled
+				&& midlet != null
+				&& user != null
+				&& (keepAlive
+//#ifndef NO_NOTIFY
+				|| notifications
+//#endif
+				)
+				&& !keepAliveRunning) {
+			midlet.start(RUN_KEEP_ALIVE, null);
+		}
+	}
+
+	public static boolean isEconomyMode() {
+		return economyMode;
 	}
 
 	public static void importSessionFromText(String text) {
@@ -1441,7 +1468,7 @@ public class MP
 					start(RUN_CHECK_OTA, null);
 				}
 
-				if (keepAlive || notifications)
+				if (!economyMode && (keepAlive || notifications))
 					start(RUN_KEEP_ALIVE, null);
 				break;
 			} catch (APIException e) {
@@ -2218,6 +2245,7 @@ public class MP
 			break;
 		}
 		case RUN_KEEP_ALIVE: { // Keep session alive & notifications
+			keepAliveRunning = true;
 			try {
 				boolean wasShown = false;
 				StringBuffer sb = new StringBuffer();
@@ -2231,6 +2259,12 @@ public class MP
 						|| notifications
 //#endif
 						)) {
+					if (economyMode) {
+						// Battery-saving mode: keep the thread parked without any network activity.
+						//noinspection BusyWait
+						Thread.sleep(3000);
+						continue;
+					}
 					//noinspection BusyWait
 					Thread.sleep(wasShown ? pushInterval : pushBgInterval);
 					if (
@@ -2310,6 +2344,7 @@ public class MP
 //#endif
 				}
 			} catch (Exception ignored) {}
+			keepAliveRunning = false;
 			break;
 		}
 		case RUN_CANCEL_UPDATES: {
