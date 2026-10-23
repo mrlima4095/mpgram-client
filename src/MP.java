@@ -451,6 +451,8 @@ public class MP
 
 	// ui
 	private static Displayable mainDisplayable;
+	private static Form startupForm;
+	private static Command startupBackCmd;
 	static Form loadingForm;
 	static Displayable chatsList;
 	static FoldersList foldersList;
@@ -797,6 +799,7 @@ public class MP
 
 		Form f = new Form("MPGram");
 		f.append("Loading");
+		startupForm = f;
 		mainDisplayable = f;
 		if (!backgroundStart) display.setCurrent(f);
 
@@ -1280,6 +1283,16 @@ public class MP
 		loadingForm.append(L[LLoading]);
 		loadingForm.addCommand(cancelCmd);
 		loadingForm.setCommandListener(this);
+
+		// Startup screen shown while the session is validated. When auto-login runs in the
+		// background and fails (e.g. no connectivity), this is what the user sees after tapping
+		// the MPGram icon, so it must offer a way to retry or to leave MPGram.
+		startupForm.deleteAll();
+		startupForm.append(L[LLoading]);
+		startupBackCmd = new Command(L[LBack], Command.BACK, 2);
+		startupForm.addCommand(authRetryCmd);
+		startupForm.addCommand(startupBackCmd);
+		startupForm.setCommandListener(this);
 
 		// load resources
 //#ifndef NO_AVATARS
@@ -3408,6 +3421,14 @@ public class MP
 			user = phone = selfId = null;
 			writeAuth();
 			current = mainDisplayable = authForm;
+			destroyApp(true);
+			return;
+		}
+		if (c == startupBackCmd) {
+			// Leave MPGram and return to the host MIDlet menu. Cancel any in-flight
+			// background validation so it cannot pop an alert over the host UI later.
+			authenticationCancelled = true;
+			backgroundStart = true;
 			destroyApp(true);
 			return;
 		}
