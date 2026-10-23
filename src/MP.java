@@ -70,6 +70,7 @@ public class MP
 		void openMIDPlayNowPlayingFromMPGram();
 		void openGitHubLinkFromMPGram(String url);
 		void openWattpadLinkFromMPGram(String url);
+		void openPinterestLinkFromMPGram(String url);
 		boolean saveMPGramMessageAsNote(String text);
 		boolean saveMPGramSessionCodeAsNote(String text);
 	}
@@ -6740,6 +6741,10 @@ public class MP
 			((Host) host).openWattpadLinkFromMPGram(url);
 			return;
 		}
+		if (isPinterestUrl(url) && host instanceof Host) {
+			((Host) host).openPinterestLinkFromMPGram(url);
+			return;
+		}
 		if (selfId != null && handleDeepLink(url, ask)) {
 			return;
 		}
@@ -6766,6 +6771,18 @@ public class MP
 		else if (value.startsWith("http://")) value = value.substring(7);
 		if (value.startsWith("www.")) value = value.substring(4);
 		return value.equals("wattpad.com") || value.startsWith("wattpad.com/");
+	}
+
+	private static boolean isPinterestUrl(String url) {
+		if (url == null) return false;
+		String value = url.trim().toLowerCase();
+		if (value.startsWith("https://")) value = value.substring(8);
+		else if (value.startsWith("http://")) value = value.substring(7);
+		if (value.startsWith("www.")) value = value.substring(4);
+		return value.equals("pinterest.com")
+				|| value.startsWith("pinterest.com/")
+				|| value.endsWith(".pinterest.com")
+				|| value.indexOf(".pinterest.com/") != -1;
 	}
 
 	/** @noinspection StatementWithEmptyBody*/
