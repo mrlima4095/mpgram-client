@@ -71,6 +71,7 @@ public class MP
 		void openGitHubLinkFromMPGram(String url);
 		void openWattpadLinkFromMPGram(String url);
 		void openPinterestLinkFromMPGram(String url);
+		void openRedditLinkFromMPGram(String url);
 		boolean saveMPGramMessageAsNote(String text);
 		boolean saveMPGramSessionCodeAsNote(String text);
 	}
@@ -6801,6 +6802,10 @@ public class MP
 			((Host) host).openPinterestLinkFromMPGram(url);
 			return;
 		}
+		if (isRedditUrl(url) && host instanceof Host) {
+			((Host) host).openRedditLinkFromMPGram(url);
+			return;
+		}
 		if (selfId != null && handleDeepLink(url, ask)) {
 			return;
 		}
@@ -6839,6 +6844,20 @@ public class MP
 				|| value.startsWith("pinterest.com/")
 				|| value.endsWith(".pinterest.com")
 				|| value.indexOf(".pinterest.com/") != -1;
+	}
+
+	private static boolean isRedditUrl(String url) {
+		if (url == null) return false;
+		String value = url.trim().toLowerCase();
+		if (value.startsWith("https://")) value = value.substring(8);
+		else if (value.startsWith("http://")) value = value.substring(7);
+		if (value.startsWith("www.")) value = value.substring(4);
+		return value.equals("reddit.com")
+				|| value.startsWith("reddit.com/")
+				|| value.endsWith(".reddit.com")
+				|| value.indexOf(".reddit.com/") != -1
+				|| value.equals("redd.it")
+				|| value.startsWith("redd.it/");
 	}
 
 	/** @noinspection StatementWithEmptyBody*/
