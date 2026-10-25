@@ -72,6 +72,8 @@ public class MP
 		void openWattpadLinkFromMPGram(String url);
 		void openPinterestLinkFromMPGram(String url);
 		void openRedditLinkFromMPGram(String url);
+		/** Offers the URL to the host router before falling back to the device browser. */
+		boolean openSharedLink(String url);
 		boolean saveMPGramMessageAsNote(String text);
 		boolean saveMPGramSessionCodeAsNote(String text);
 	}
@@ -6807,6 +6809,9 @@ public class MP
 			return;
 		}
 		if (selfId != null && handleDeepLink(url, ask)) {
+			return;
+		}
+		if (host instanceof Host && ((Host) host).openSharedLink(url)) {
 			return;
 		}
 		if (ask) {
